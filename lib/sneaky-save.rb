@@ -35,6 +35,11 @@ module SneakySave
 
         attributes_values = send :arel_attributes_values
 
+        if self.id.nil? && !connection.prefetch_primary_key?(self.class.table_name)
+          # Remove the id field for databases like Postgres which will raise an error on id being NULL
+          attributes_values.reject! { |key,val| key.name == 'id' }
+        end
+
         new_id = if attributes_values.empty?
           self.class.unscoped.insert connection.empty_insert_statement_value
         else
